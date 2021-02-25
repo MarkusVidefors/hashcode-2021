@@ -1,4 +1,6 @@
 use std::io::Read;
+mod sim;
+use mod sim;
 
 fn main() {
     let mut buf = String::new();
