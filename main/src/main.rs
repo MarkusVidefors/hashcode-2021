@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::io::Read;
 
 fn main() {
@@ -13,6 +14,8 @@ fn main() {
 
     let mut bloo = vec![Vec::new(); i];
 
+    let mut floo = HashMap::new();
+
     let mut streets = Vec::with_capacity(s);
     for _ in 0..s {
         let b: usize = input.next().unwrap().parse().unwrap();
@@ -27,18 +30,38 @@ fn main() {
     for _ in 0..v {
         let p: usize = input.next().unwrap().parse().unwrap();
         let mut car = Vec::with_capacity(p);
-        for _ in 0..p {
+        for _ in 1..p {
             let name = input.next().unwrap();
+            if let Some(foo) = floo.get_mut(name) {
+                *foo += 1;
+            } else {
+                floo.insert(name, 1);
+            }
             car.push(name);
         }
+        let name = input.next().unwrap();
+        car.push(name);
         cars.push(car);
     }
 
-    println!("{}", i);
+    let mut gloo = Vec::with_capacity(i);
     for id in 0..i {
-        println!("{}", id);
-        println!("{}", bloo[id].len());
+        let mut streets = Vec::with_capacity(bloo[id].len());
         for n in bloo[id].iter() {
+            if floo.contains_key(n) {
+                streets.push(n);
+            }
+        }
+        if streets.len() != 0 {
+            gloo.push((id, streets));
+        }
+    }
+
+    println!("{}", gloo.len());
+    for g in gloo {
+        println!("{}", g.0);
+        println!("{}", g.1.len());
+        for n in g.1 {
             println!("{} 1", n);
         }
     }
