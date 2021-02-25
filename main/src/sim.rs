@@ -1,32 +1,32 @@
 use std::collections::VecDeque;
 
-struct Street {
+struct Street<'a> {
     from: usize,
-    to: usize,
-    name: String,
+    end: usize,
+    name: &'a str,
     len: usize,
-    cars: VecDeque<Car>,
+    cars: VecDeque<Car<'a>>,
 }
 
-impl Street {
-    fn new(data: (usize, usize, String, usize)) -> Self {
+impl<'a> Street<'a> {
+    fn new(data: (usize, usize, &'a str, usize)) -> Self {
         Self {
             from: data.0,
-            to: data.1,
+            end: data.1,
             name: data.2,
             len: data.3,
-            cars: Vec::new(),
+            cars: VecDeque::new(),
         }
     }
 }
 
-struct Car {
-    path: Vec<String>,
-    dist: i32,
+struct Car<'a> {
+    path: Vec<&'a str>,
+    dist: usize,
 }
 
-impl Car {
-    fn new(data: Vec<String>) -> Self {
+impl<'a> Car<'a> {
+    fn new(data: Vec<&'a str>) -> Self {
         Self {
             path: data,
             dist: 0,
@@ -34,43 +34,45 @@ impl Car {
     }
 }
 
-struct Simulator {
-    cars: Vec<Car>,
-    streets: Vec<Street>,
-    light_sch: Vec<Vec<(String, usize)>>, // street, time
+pub struct Simulator<'a> {
+    streets: Vec<Street<'a>>,
+    light_sch: Vec<Vec<(&'a str, usize)>>, // street, time
     stop_time: usize,
-    intersections: Vec<(usize, usize)>, // current street index in light_schedual, time left
+    intersections: Vec<(usize, usize)>, // current street index in light_schedule, time left
     f: usize,
 }
 
-impl Simulator {
-    fn new(
-        street_data: Vec<(usize, usize, String, usize)>,
-        car_data: Vec<Vec<String>>,
+impl<'a> Simulator<'a> {
+    pub fn new(
+        street_data: &Vec<(usize, usize, &'a str, usize)>,
+        car_data: &Vec<Vec<&'a str>>,
         n_inters: usize,
-        light_sch: Vec<Vec<(String, usize)>>,
+        light_sch: Vec<Vec<(&'a str, usize)>>,
         stop_time: usize,
         f: usize,
     ) -> Self {
         let mut streets = Vec::new();
         for sd in street_data {
-            streets.push(Street::new(sd));
+            streets.push(Street::new(*sd));
         }
-        let mut cars = Vec::new();
         for cd in car_data {
-            let car = Car::new(cd);
-            for s in streets.iter() {
+            let car = Car::new(cd.clone());
+            for s in streets.iter_mut() {
                 if s.name == car.path[0] {
-                    s.cars.push(car)
+                    s.cars.push_back(car);
+                    break;
                 }
             }
         }
         let mut intersections = Vec::with_capacity(n_inters);
         for i in 0..n_inters {
-            intersections.push((0, light_sch[i][0].1));
+            if light_sch[i].is_empty() {
+                intersections.push((0, 0));
+            } else {
+                intersections.push((0, light_sch[i][0].1));
+            }
         }
         Self {
-            cars,
             streets,
             light_sch,
             stop_time,
@@ -78,44 +80,52 @@ impl Simulator {
             f,
         }
     }
-    fn run() -> usize {
+
+    pub fn run(&mut self) -> usize {
         let mut score = 0;
         for t in 0..self.stop_time {
-            for s in self.streets.iter() {
-                for c in s.cars.iter() {
+            for street_index in 0..self.streets.len() {
+                for c in self.streets[street_index].cars.iter_mut() {
                     if c.dist > 0 {
                         c.dist -= 1;
                     }
                 }
-                if self.light_sch[s.end][self.intersections[s.end].0].0 == s.name {
-                    if let Some(c) = s.cars.front() {
+                if !self.light_sch[self.streets[street_index].end].is_empty()
+                    && self.light_sch[self.streets[street_index].end]
+                        [self.intersections[self.streets[street_index].end].0]
+                        .0
+                        == self.streets[street_index].name
+                {
+                    if let Some(c) = self.streets[street_index].cars.front() {
                         if c.dist == 0 {
-                            let car = s.cars.pop_front().unwrap();
-                            car.path.remove[0];
+                            let mut car = self.streets[street_index].cars.pop_front().unwrap();
+                            car.path.remove(0);
                             if !car.path.len() == 0 {
-                                for target in streets.iter() {
+                                for target in self.streets.iter_mut() {
                                     if target.name == car.path[0] {
                                         car.dist = target.len;
-                                        target.cars.push_back(car)
+                                        target.cars.push_back(car);
+                                        break;
                                     }
                                 }
                             } else {
-                                //POINTS!
                                 score += self.f + self.stop_time - t;
                             }
                         }
                     }
                 }
             }
-            for (n, i) in self.intersections.iter().enumerate() {
-                i.1 -= 1;
-                if i.1 == 0 {
-                    let mut idx = i.0 + 1;
-                    if idx == self.light_sch[n].len() {
-                        idx = 0;
+            for (n, i) in self.intersections.iter_mut().enumerate() {
+                if !self.light_sch[n].is_empty() {
+                    i.1 -= 1;
+                    if i.1 == 0 {
+                        let mut idx = i.0 + 1;
+                        if idx == self.light_sch[n].len() {
+                            idx = 0;
+                        }
+                        i.0 = idx;
+                        i.1 = self.light_sch[n][idx].1;
                     }
-                    i.0 = idx;
-                    i.1 = light_sch[n][idx].1;
                 }
             }
         }

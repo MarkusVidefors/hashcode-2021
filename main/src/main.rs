@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 use std::io::Read;
 mod sim;
-use mod sim;
+
+use crate::sim::Simulator;
 
 fn main() {
     let mut buf = String::new();
@@ -46,25 +47,31 @@ fn main() {
         cars.push(car);
     }
 
-    let mut gloo = Vec::with_capacity(i);
+    let mut gloo = Vec::with_capacity(i); // Light schedule
     for id in 0..i {
         let mut streets = Vec::with_capacity(bloo[id].len());
         for n in bloo[id].iter() {
             if floo.contains_key(n) {
-                streets.push(n);
+                streets.push((*n, 1usize));
             }
         }
         if streets.len() != 0 {
-            gloo.push((id, streets));
+            gloo.push(streets);
+        } else {
+            gloo.push(Vec::new());
         }
     }
 
-    println!("{}", gloo.len());
-    for g in gloo {
-        println!("{}", g.0);
-        println!("{}", g.1.len());
-        for n in g.1 {
-            println!("{} 1", n);
-        }
-    }
+    let mut sim = Simulator::new(&streets, &cars, i, gloo.clone(), d, f);
+
+    println!("Score: {}", sim.run());
+
+    // println!("{}", gloo.len());
+    // for g in gloo {
+    //     println!("{}", g.0);
+    //     println!("{}", g.1.len());
+    //     for n in g.1 {
+    //         println!("{} 1", n);
+    //     }
+    // }
 }
