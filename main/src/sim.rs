@@ -86,8 +86,8 @@ impl<'a> Simulator<'a> {
         for t in 0..self.stop_time {
             for street_index in 0..self.streets.len() {
                 let street = &mut self.streets[street_index];
-                let intersection = street.end;
-                let schedule = self.light_sch[street.end];
+                let intersection = self.intersections[street.end];
+                let schedule = &self.light_sch[street.end];
 
                 if !schedule.is_empty() && schedule[intersection.0].0 == street.name
                 {
