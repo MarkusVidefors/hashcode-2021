@@ -85,11 +85,6 @@ impl<'a> Simulator<'a> {
         let mut score = 0;
         for t in 0..self.stop_time {
             for street_index in 0..self.streets.len() {
-                for c in self.streets[street_index].cars.iter_mut() {
-                    if c.dist > 0 {
-                        c.dist -= 1;
-                    }
-                }
                 if !self.light_sch[self.streets[street_index].end].is_empty()
                     && self.light_sch[self.streets[street_index].end]
                         [self.intersections[self.streets[street_index].end].0]
@@ -114,7 +109,13 @@ impl<'a> Simulator<'a> {
                         }
                     }
                 }
+                for c in self.streets[street_index].cars.iter_mut() {
+                    if c.dist > 0 {
+                        c.dist -= 1;
+                    }
+                }
             }
+
             for (n, i) in self.intersections.iter_mut().enumerate() {
                 if !self.light_sch[n].is_empty() {
                     i.1 -= 1;
