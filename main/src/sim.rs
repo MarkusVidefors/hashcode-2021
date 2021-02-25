@@ -85,17 +85,15 @@ impl<'a> Simulator<'a> {
         let mut score = 0;
         for t in 0..self.stop_time {
             for street_index in 0..self.streets.len() {
-                if !self.light_sch[self.streets[street_index].end].is_empty()
-                    && self.light_sch[self.streets[street_index].end]
-                        [self.intersections[self.streets[street_index].end].0]
-                        .0
-                        == self.streets[street_index].name
+                let street = &mut self.streets[street_index];
+                if !self.light_sch[street.end].is_empty()
+                    && self.light_sch[street.end][self.intersections[street.end].0].0 == street.name
                 {
-                    if let Some(c) = self.streets[street_index].cars.front() {
+                    if let Some(c) = street.cars.front() {
                         if c.dist == 0 {
-                            let mut car = self.streets[street_index].cars.pop_front().unwrap();
+                            let mut car = street.cars.pop_front().unwrap();
                             car.path.remove(0);
-                            if !car.path.len() == 0 {
+                            if car.path.len() != 0 {
                                 for target in self.streets.iter_mut() {
                                     if target.name == car.path[0] {
                                         car.dist = target.len;
