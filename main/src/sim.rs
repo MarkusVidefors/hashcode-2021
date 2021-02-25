@@ -3,9 +3,9 @@ use std::collections::VecDeque;
 struct Street {
     from: usize,
     to: usize,
-    name: String
+    name: String,
     len: usize,
-    cars: VecDeque<Car>
+    cars: VecDeque<Car>,
 }
 
 impl Street {
@@ -29,11 +29,10 @@ impl Car {
     fn new(data: Vec<String>) -> Self {
         Self {
             path: data,
-            dist: 0
+            dist: 0,
         }
     }
 }
-
 
 struct Simulator {
     cars: Vec<Car>,
@@ -45,14 +44,21 @@ struct Simulator {
 }
 
 impl Simulator {
-    fn new(street_data: Vec<(usize, usize, String, usize)>, car_data: Vec<Vec<String>>, n_inters: usize, light_sch: Vec<Vec<(String, usize)>>, stop_time: usize, f: usize) -> Self{
+    fn new(
+        street_data: Vec<(usize, usize, String, usize)>,
+        car_data: Vec<Vec<String>>,
+        n_inters: usize,
+        light_sch: Vec<Vec<(String, usize)>>,
+        stop_time: usize,
+        f: usize,
+    ) -> Self {
         let mut streets = Vec::new();
         for sd in street_data {
-            streets.push( Street::new(sd));
+            streets.push(Street::new(sd));
         }
         let mut cars = Vec::new();
         for cd in car_data {
-            let car = Car::new(cd)
+            let car = Car::new(cd);
             for s in streets.iter() {
                 if s.name == car.path[0] {
                     s.cars.push(car)
@@ -61,7 +67,7 @@ impl Simulator {
         }
         let mut intersections = Vec::with_capacity(n_inters);
         for i in 0..n_inters {
-            intersections.push((0,light_sch[i][0].1));
+            intersections.push((0, light_sch[i][0].1));
         }
         Self {
             cars,
@@ -72,10 +78,9 @@ impl Simulator {
             f,
         }
     }
-    fn run() -> usize{
+    fn run() -> usize {
         let mut score = 0;
         for t in 0..self.stop_time {
-            
             for s in self.streets.iter() {
                 for c in s.cars.iter() {
                     if c.dist > 0 {
@@ -83,12 +88,11 @@ impl Simulator {
                     }
                 }
                 if self.light_sch[s.end][self.intersections[s.end].0].0 == s.name {
-
                     if let Some(c) = s.cars.front() {
                         if c.dist == 0 {
                             let car = s.cars.pop_front().unwrap();
                             car.path.remove[0];
-                            if !car.path.len() == 0{
+                            if !car.path.len() == 0 {
                                 for target in streets.iter() {
                                     if target.name == car.path[0] {
                                         car.dist = target.len;
@@ -99,11 +103,9 @@ impl Simulator {
                                 //POINTS!
                                 score += self.f + self.stop_time - t;
                             }
-                           
                         }
                     }
-
-                } 
+                }
             }
             for (n, i) in self.intersections.iter().enumerate() {
                 i.1 -= 1;
